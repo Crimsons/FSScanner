@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/android-support-v4"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/google-play-services"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/android-async-http-1.4.3"/>
+	<classpathentry kind="src" path="gen"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Android-PullToRefresh"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/google-play-services_lib"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/actionbarsherlock"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/LazyList"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/SlidingMenu"/>
+	<classpathentry kind="output" path="out/production/FSScanner"/>
+</classpath>

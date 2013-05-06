@@ -1,0 +1,46 @@
+<resources>
+
+    <!-- ListView styles -->
+    <style name="NameText">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textSize">18dp</item>
+        <item name="android:textColor">#000000</item>
+    </style>
+
+    <style name="AddressText">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textSize">14dp</item>
+        <item name="android:textColor">#888888</item>
+    </style>
+
+    <style name="DetailNumber">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">12dp</item>
+        <item name="android:textColor">#bbbbbb</item>
+    </style>
+
+    <!-- AboutActivity styles -->
+    <style name="about_activity">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">#ffffff</item>
+    </style>
+
+    <style name="about_activity.large">
+        <item name="android:textSize">28dp</item>
+    </style>
+
+    <style name="about_activity.medium">
+        <item name="android:textSize">16dp</item>
+    </style>
+
+    <style name="about_activity.small">
+        <item name="android:textSize">14dp</item>
+    </style>
+
+</resources>

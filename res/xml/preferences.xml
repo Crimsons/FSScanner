@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <PreferenceCategory 
+        android:title="Filters" >
+	    <EditTextPreference
+	    	android:key="keyword"
+	        android:title="Keyword"
+	        android:summary="Specify a keyword to search venues"
+	        android:defaultValue="" />
+	    
+	    <CheckBoxPreference
+	        android:key="bars"
+	        android:title="Bars"
+	        android:summary="Show bars in result"
+	        android:defaultValue="false" />
+	    
+	    <CheckBoxPreference
+	        android:key="food"
+	        android:title="Food"
+	        android:summary="Show venues to get food from"
+	        android:defaultValue="false" />
+	    
+	    <CheckBoxPreference
+	        android:key="shops"
+	        android:title="Shops"
+	        android:summary="Search for any kind of shops"
+	        android:defaultValue="false" />
+	</PreferenceCategory>
+	
+    <PreferenceCategory 
+        android:title="Settings" >
+
+	    <EditTextPreference
+            android:key="radius"
+	        android:title="Radius"
+	        android:summary="Specify radius in meters within to search for venues. Max 100000."
+	        android:inputType="number"
+            android:digits="0123456789"
+	        android:defaultValue="100" />
+	    
+	    <ListPreference
+	        android:key="provider"
+	        android:title="Location accuracy"
+	        android:summary="Select your location detection accuracy"
+	        android:dialogTitle="Location accuracy"
+	        android:entries="@array/pref_accuracy_entries"
+	        android:entryValues="@array/pref_accuracy_values"
+	        android:defaultValue="network" />
+	</PreferenceCategory>
+	
+	<PreferenceCategory 
+        android:title="About"
+        android:key="about">
+	    <Preference
+	        android:title="FSScanner"
+	        android:summary="Version 1.1" >
+		    <intent
+		        android:action=".AboutActivity" />
+		</Preference>
+	</PreferenceCategory>
+
+</PreferenceScreen>

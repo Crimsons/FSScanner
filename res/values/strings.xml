@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">FSScanner</string>
+    <string name="action_settings">Settings</string>
+    <string name="copyrigth">\u00A9 2013 Jakob Hoyer</string>
+
+    <string-array name="pref_accuracy_entries">
+    	<item>Low (Network)</item>
+    	<item>High (GPS)</item>    
+    </string-array>
+    <string-array name="pref_accuracy_values">
+        <item>network</item>
+        <item>gps</item>
+    </string-array>
+    
+</resources>

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="#000000">
+
+    <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/activity_horizontal_margin"
+            android:orientation="vertical"
+            android:gravity="center_horizontal" >
+
+        <ImageView
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:src="@drawable/radar_logo"
+                android:contentDescription="logo"/>
+        <TextView
+                android:text="FSScanner"
+                style="@style/about_activity.large" />
+        <TextView
+                android:text="@string/copyrigth"
+                style="@style/about_activity.small" />
+        <TextView
+                android:text="Version 1.1"
+                style="@style/about_activity.medium"
+                android:layout_marginTop="18dp" />
+        <TextView
+                android:text="* ported to ActionBarSherlock"
+                style="@style/about_activity.small"
+                android:layout_gravity="left" />
+        <TextView
+                android:text="* Integrating SlidingMenu to show FS logo"
+                style="@style/about_activity.small"
+                android:layout_gravity="left" />
+        <TextView
+                android:text="* PullToRefresh"
+                style="@style/about_activity.small"
+                android:layout_gravity="left" />
+        <TextView
+                android:text="* Lazylist (caching icons on SD card)"
+                style="@style/about_activity.small"
+                android:layout_gravity="left" />
+        <TextView
+                android:text="* Handling screen rotation"
+                style="@style/about_activity.small"
+                android:layout_gravity="left" />
+        <TextView
+                android:text="Version 1.0"
+                style="@style/about_activity.medium"
+                android:layout_marginTop="18dp" />
+        <TextView
+                android:text="* FourSquare API"
+                style="@style/about_activity.small"
+                android:layout_gravity="left" />
+        <TextView
+                android:text="* Google Maps Android API v2"
+                style="@style/about_activity.small"
+                android:layout_gravity="left" />
+        <TextView
+                android:text="* Preferences menu"
+                style="@style/about_activity.small"
+                android:layout_gravity="left" />
+
+        <ImageView
+                android:layout_width="300dp"
+                android:layout_height="wrap_content"
+                android:src="@drawable/poweredbyfs"
+                android:contentDescription="FSlogo"/>
+
+    </LinearLayout>
+</ScrollView>

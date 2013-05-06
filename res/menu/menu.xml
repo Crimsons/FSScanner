@@ -1,0 +1,29 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:id="@+id/refresh"
+        android:icon="@drawable/ic_menu_refresh"
+        android:title="Refresh"
+        android:showAsAction="always|withText" />
+
+    <item
+        android:icon="@drawable/ic_menu_sort"
+        android:title="Sort List"
+        android:showAsAction="always|withText" >
+        <menu>
+            <item
+                android:id="@+id/sort_by_distance"
+                android:title="by distance" />
+            <item
+                android:id="@+id/sort_by_popularity"
+                android:title="by popularity" />
+        </menu>
+    </item>
+
+    <item
+        android:id="@+id/settings"
+        android:icon="@drawable/ic_menu_preferences"
+        android:title="Settings"
+        android:showAsAction="never" />
+
+</menu>
