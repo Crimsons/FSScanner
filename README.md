@@ -1,8 +1,12 @@
-FSScaner Version 1.0
+FSScaner Version 1.1
 
 (C) 2013 Jakob Hoyer
 
-
+This is a simple application that queries FourSquare API for venues and
+presents them as a list. Also some additional information is displayed
+on each venue (distance, count of checkins, address if present, category icon).
+The application also features Google Maps API - when a venue is tapped,
+it is displayed on a map.
 
 
 Featuring

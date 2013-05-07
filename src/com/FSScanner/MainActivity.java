@@ -37,13 +37,46 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView.OnItemClickListener;
 
+/**
+ * FSScaner Version 1.1
+ * (C) 2013 Jakob Hoyer
+ *
+ *
+ * This is a simple application that queries FourSquare API for venues and
+ * presents them as a list. Also some additional information is displayed
+ * on each venue (distance, count of checkins, address if present, category icon).
+ * The application also features Google Maps API - when a venue is tapped,
+ * it is displayed on a map.
+ *
+ *
+ * Featuring:
+ *
+ * FourSquare API
+ * Google Maps Android API v2
+ * Caching icons on SD card
+ *
+ *
+ * The application is including following 3rd party libraries:
+ *
+ * SlidingMenu - https://github.com/jfeinstein10/SlidingMenu
+ * ActionBarSherlock - http://actionbarsherlock.com
+ * PulltoRefresh - https://github.com/chrisbanes/Android-PullToRefresh
+ * LazyList - https://github.com/thest1/LazyList
+ * android-async-http - https://github.com/loopj/android-async-http
+ *
+ */
+
+
+
+
+
 public class MainActivity extends SherlockActivity {
 
 	// logcat logging
     private static final boolean LOG_ENABLED = true;
     private static final String LOG_TAG = "MainActivity";
 
-    // FourSquare specific contants
+    // FourSquare API specific contants
     private static final String API_VERSION = "20130501";
     private static final String CLIENT_ID = "GD55T2ZOVEHDYE3T4IDA22HLSS12JAJSWUUQLUFEM4CPKLU0";
 	private static final String CLIENT_SECRET = "IVDKCQVGOSXP2LRD3I12NULFIJUYL51H1MPLVOX30NGWGAUO";
@@ -60,7 +93,6 @@ public class MainActivity extends SherlockActivity {
     protected static final String MARKER_LNG = "marker_lng";
 
     // keys for data in savedInstanceState
-    private static final String LOC_PROVIDER = "loc_prov";
     private static final String LOCATION = "loc";
     private static final String VENUES_LIST = "ven_list";
 
@@ -126,7 +158,7 @@ public class MainActivity extends SherlockActivity {
             venuesList.addAll( savedInstanceState.getParcelableArrayList(VENUES_LIST) );
 
 			// update listView
-            drawListView();
+            updateListView();
 		} else {
             refreshVenues();
 		}
@@ -211,16 +243,23 @@ public class MainActivity extends SherlockActivity {
 
 
     /**
-     * If application starts, this method gets location provider from preferences,
-     * creates locationListener and registers them with LocationManager for single update.
+     * Location detection source depends on available location providers that
+     * the user can enable in System settings. Emphasis is on accuracy, so if GPS
+     * is enabled, then it is preferred source.
+     * Single location update is requested on application startup (location == null)
+     * or when best available provider has changed (user has changed System settings
+     * while application is on the background)
      */
     private void locationSetup() {
         // log
         if (LOG_ENABLED) Log.d(LOG_TAG, "locationSetup()");
 
-        // get location provider
+        // get location provider, prefer accurate provider
+        // getBestProvider() returns only enabled provider
         final Criteria criteria = new Criteria();
         criteria.setAccuracy(Criteria.ACCURACY_FINE);
+        criteria.setHorizontalAccuracy(Criteria.ACCURACY_HIGH);
+        criteria.setCostAllowed(true);
         final LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         final String locationProvider = locationManager.getBestProvider(criteria, true);
 
@@ -240,6 +279,9 @@ public class MainActivity extends SherlockActivity {
         // log
         if (LOG_ENABLED) Log.d(LOG_TAG, "Location updates requested from: " + locationProvider);
 
+        // inform user, takes some additional time
+        makeToast("Detecting location, please wait!");
+
         // create locationlistener. When loacation detection is finished,
         // global location is updated and getFourSquareVenues() is called.
         final LocationListener locationListener = new LocationListener() {
@@ -254,17 +296,7 @@ public class MainActivity extends SherlockActivity {
             }
 
             @Override
-            public void onStatusChanged(String provider, int status, Bundle extras) {
-                // log
-                if (LOG_ENABLED) {
-                    final String statusMsg;
-                    if ( status == 0 ) statusMsg = "OUT_OF_SERVICE";
-                    else if ( status == 1 ) statusMsg = "TEMPORARILY_UNAVAILABLE";
-                    else if ( status == 2 ) statusMsg = "AVAILABLE";
-                    else statusMsg = "UNDEFINED";
-                    Log.d(LOG_TAG, "onStatusChanged(): " + provider + " Status: " + statusMsg);
-                }
-            }
+            public void onStatusChanged(String provider, int status, Bundle extras) {}
             @Override
             public void onProviderEnabled(String provider) {}
 
@@ -303,7 +335,6 @@ public class MainActivity extends SherlockActivity {
 		if ( !keyword.isEmpty() ) {
 			url += "&query=" + keyword;
 		}
-        url += "&limit=50";
 
         final String radius = preferences.getString(PREFS_RADIUS, "100");
         url += "&radius=" + radius;
@@ -349,10 +380,10 @@ public class MainActivity extends SherlockActivity {
 
 
     /**
-     * All the JSON parsing and loading venues to ArraysList when HTTP client was
+     * JSON parsing and loading venues to ArraysList when HTTP client was
      * successfully comlpeted. venuesList has to be reused because it is registered
-     * with listView adapter and the reference must not change. Finally listView is
-     * updated and loading animations hidden.
+     * with listView adapter and the reference must not change.
+     * Finally listView is updated and loading animations hidden.
      * @param jsonObject JSON object from HTTP client containing venues
      */
     private void parseJson(JSONObject jsonObject) {
@@ -408,7 +439,7 @@ public class MainActivity extends SherlockActivity {
         }
 
         //refreshVenues listview
-        drawListView();
+        updateListView();
 
         //refreshing is complete, hide loading animations
         stopRefreshMakeToast(false, null);
@@ -417,11 +448,11 @@ public class MainActivity extends SherlockActivity {
 
     /**
      * Notifies the CustomAdapter that the underlaying data(venuesList) has changed
-     * Also if the list id empty, toast is shown
+     * Also if the list id empty, toast message is shown
      */
-    private void drawListView() {
+    private void updateListView() {
         // log
-        if (LOG_ENABLED) Log.d(LOG_TAG, "drawListView()");
+        if (LOG_ENABLED) Log.d(LOG_TAG, "updateListView()");
 
         // if no venues was received from FourSquare
         if (venuesList.isEmpty()) makeToast("No venues found!");
@@ -432,7 +463,7 @@ public class MainActivity extends SherlockActivity {
 
 
     /**
-     * Hide refreshing animations and show Toast message
+     * Stop refreshing and show Toast message.
      * @param makeToast makes Toast message if true
      * @param message   message to show on Toast
      */
@@ -509,12 +540,12 @@ public class MainActivity extends SherlockActivity {
 	            return true;
             case R.id.sort_by_distance:
                 Collections.sort( venuesList, new VenueComparator(VenueComparator.CompareBy.DISTANCE));
-                drawListView();
+                updateListView();
                 return true;
             case R.id.sort_by_popularity:
                 Collections.sort( venuesList,
                         Collections.reverseOrder(new VenueComparator(VenueComparator.CompareBy.POPULARITY)));
-                drawListView();
+                updateListView();
                 return true;
             case R.id.settings:
 	        	Intent j = new Intent(MainActivity.this, SettingsActivity.class);
