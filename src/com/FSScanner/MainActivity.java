@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import android.app.Activity;
+import android.location.Criteria;
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.SherlockActivity;
 import com.actionbarsherlock.view.Menu;
@@ -18,7 +18,6 @@ import com.handmark.pulltorefresh.library.PullToRefreshBase.OnRefreshListener;
 import com.handmark.pulltorefresh.library.PullToRefreshListView;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.slidingmenu.lib.SlidingMenu;
-import com.slidingmenu.lib.app.SlidingActivity;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -67,7 +66,6 @@ public class MainActivity extends SherlockActivity {
 
     // keys for preferences
     private static final String PREFS_KEYWORD = "keyword";
-    private static final String PREFS_PROVIDER = "provider";
     protected static final String PREFS_RADIUS = "radius";
     private static final String PREFS_FOOD = "food";
     private static final String PREFS_BARS = "bars";
@@ -80,6 +78,7 @@ public class MainActivity extends SherlockActivity {
 	private SharedPreferences preferences;
     private PullToRefreshListView pullToRefreshListView;
 	private ListView listView;
+    private SlidingMenu menu;
 
     // RefreshVenues icon (action item on actionbar) visibility.
     // Used in onCreateOptionsMenu()
@@ -103,11 +102,11 @@ public class MainActivity extends SherlockActivity {
         setContentView(R.layout.main_layout);
 
         // configure SlidingMenu
-        slidingMenuSetup();
+        setupSlidingMenu();
 
 		// make app icon clickable
         ActionBar actionBar = getSupportActionBar();
-        actionBar.setHomeButtonEnabled(true);
+        actionBar.setDisplayHomeAsUpEnabled(true);
 
 		// initialize preferences
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
@@ -119,11 +118,14 @@ public class MainActivity extends SherlockActivity {
 		// In case of screen rotation get persisted data from bundle.
         // Otherwise need to get new data from Foursquare.com
         if (savedInstanceState != null) {
+			// stop refreshing that was initiated before screen rotation
+            stopRefreshMakeToast(false, null);
+
 			// get data from bundle
-            setSupportProgressBarIndeterminateVisibility(false);
             location = savedInstanceState.getParcelable(LOCATION);
             venuesList.addAll( savedInstanceState.getParcelableArrayList(VENUES_LIST) );
-			// compose listView
+
+			// update listView
             drawListView();
 		} else {
             refreshVenues();
@@ -134,18 +136,17 @@ public class MainActivity extends SherlockActivity {
     /**
      * Setup slidingMenu
      */
-    private void slidingMenuSetup() {
+    private void setupSlidingMenu() {
 
-        SlidingMenu menu = new SlidingMenu(this);
+        menu = new SlidingMenu(this);
         menu.setMode(SlidingMenu.LEFT);
         menu.setTouchModeAbove(SlidingMenu.TOUCHMODE_FULLSCREEN);
         menu.setShadowWidthRes(R.dimen.shadow_width);
         menu.setShadowDrawable(R.drawable.shadow);
         menu.setBehindWidthRes(R.dimen.slidingmenu_width);
         menu.setFadeDegree(0.35f);
-        menu.attachToActivity(this, SlidingMenu.SLIDING_CONTENT);
+        menu.attachToActivity(this, SlidingMenu.SLIDING_WINDOW);
         menu.setMenu(R.layout.sliding_layout);
-
     }
 
 
@@ -202,85 +203,86 @@ public class MainActivity extends SherlockActivity {
         ConnectivityManager connMgr = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
         if ( networkInfo != null && networkInfo.isConnected() ) {
-
-            // get user location
-            if ( !locationSetup() ) {
-                makeToast("Enable location provider, then refresh!");
-                pullToRefreshListView.onRefreshComplete();
-                showProgressBar(false);
-            }
+            locationSetup();
         } else {
-            makeToast("No internet connection!");
-            pullToRefreshListView.onRefreshComplete();
-            showProgressBar(false);
+            stopRefreshMakeToast(true, "No internet connection!");
         }
     }
 
 
     /**
-     * Logics to get users current location. Each time user does refresh, location update
-     * is called. If location was fixed, applications global location is updated and the
-     * value is used in next refresh query. If it is initial call to get location
-     * (location == null), then getLastKnownLocation() is called.
-     * @return  True if it was possible to register location listener. False if selected
-     *          location provider was disabled or setting initial location failed.
+     * If application starts, this method gets location provider from preferences,
+     * creates locationListener and registers them with LocationManager for single update.
      */
-    private boolean locationSetup() {
+    private void locationSetup() {
+        // log
         if (LOG_ENABLED) Log.d(LOG_TAG, "locationSetup()");
 
-        // Test if user has changed location accuracy settings in preferences menu.
-        // If we have location already and user has not changed settings, then
-        // no need to get new location and method returns.
-        String providerFromPrefs = preferences.getString(PREFS_PROVIDER, "");
-        if ( location != null && location.getProvider().equals(providerFromPrefs)) {
+        // get location provider
+        final Criteria criteria = new Criteria();
+        criteria.setAccuracy(Criteria.ACCURACY_FINE);
+        final LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        final String locationProvider = locationManager.getBestProvider(criteria, true);
+
+        // if all location providers are disabled
+        if ( locationProvider == null ) {
+            stopRefreshMakeToast(true, "Location detection disabled!");
+            return;
+        }
+
+        // if provider has not changed since last location request,
+        // we dont need to update location.
+        if ( location != null && locationProvider.equals(location.getProvider()) ) {
             getFourSquareVenues();
-            return true;
+            return;
         }
 
-        // inform user about location detection, may take some time.
-        makeToast("Detecting your location, please wait!");
-
-        // choose location provider according to preferences
-        // and test if the provider is enabled
-        LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        String locationProvider;
-        if (providerFromPrefs.equals(LocationManager.GPS_PROVIDER)) {
-            if ( locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ) {
-                locationProvider = LocationManager.GPS_PROVIDER;
-            } else {
-                makeToast("GPS disabled!");
-                return false;
-            }
-        } else {
-            if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-                locationProvider = LocationManager.NETWORK_PROVIDER;
-            } else {
-                makeToast("Network location disabled!");
-                return false;
-            }
-        }
+        // log
+        if (LOG_ENABLED) Log.d(LOG_TAG, "Location updates requested from: " + locationProvider);
 
         // create locationlistener. When loacation detection is finished,
-        // getFourSquareVenues() is called.
-        LocationListener locationListener = new LocationListener() {
+        // global location is updated and getFourSquareVenues() is called.
+        final LocationListener locationListener = new LocationListener() {
+
             @Override
             public void onLocationChanged(Location loc) {
+                // log
+                if (LOG_ENABLED) Log.d(LOG_TAG, "onLocationChanged(): " + loc.toString());
+                // update location and go on with query to FourSquare
                 location = loc;
                 getFourSquareVenues();
             }
+
             @Override
-            public void onStatusChanged(String provider, int status, Bundle extras) {}
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+                // log
+                if (LOG_ENABLED) {
+                    final String statusMsg;
+                    if ( status == 0 ) statusMsg = "OUT_OF_SERVICE";
+                    else if ( status == 1 ) statusMsg = "TEMPORARILY_UNAVAILABLE";
+                    else if ( status == 2 ) statusMsg = "AVAILABLE";
+                    else statusMsg = "UNDEFINED";
+                    Log.d(LOG_TAG, "onStatusChanged(): " + provider + " Status: " + statusMsg);
+                }
+            }
             @Override
             public void onProviderEnabled(String provider) {}
+
             @Override
-            public void onProviderDisabled(String provider) {}
+            public void onProviderDisabled(String provider) {
+                // log
+                if (LOG_ENABLED) Log.d(LOG_TAG, "onProviderDisabled(): " + provider);
+
+                // cancel update if provider is disabled
+                locationManager.removeUpdates(this);
+
+                // stop refreshing, inform user
+                stopRefreshMakeToast(true, provider + " location disabled!");
+            }
         };
 
         //register location updates with locationlistener
-        if (LOG_ENABLED) Log.d(LOG_TAG, "Location updates requested from: " + locationProvider);
         locationManager.requestSingleUpdate( locationProvider, locationListener, null);
-
-        return true;
     }
 
 
@@ -290,19 +292,20 @@ public class MainActivity extends SherlockActivity {
      * search keyword. Query URL is passed to HTTP client that runs asynchronously.
      */
 	private void getFourSquareVenues() {
+        // log
         if (LOG_ENABLED) Log.d(LOG_TAG, "getFourSquareVenues()");
 
-		//build query url
+		// build query url
 		String url = "search?ll=" + location.getLatitude() +
 	    		"," + location.getLongitude() + "&intent=browse";
 
-		String keyword = preferences.getString(PREFS_KEYWORD, "");
+		final String keyword = preferences.getString(PREFS_KEYWORD, "");
 		if ( !keyword.isEmpty() ) {
 			url += "&query=" + keyword;
 		}
         url += "&limit=50";
 
-        String radius = preferences.getString(PREFS_RADIUS, "100");
+        final String radius = preferences.getString(PREFS_RADIUS, "100");
         url += "&radius=" + radius;
 
 		url += "&categoryId=";
@@ -318,11 +321,13 @@ public class MainActivity extends SherlockActivity {
 		}
 		url += "&client_id=" + CLIENT_ID + "&client_secret=" + CLIENT_SECRET + "&v=" + API_VERSION;
 
-		//remove all whitespaces from url
+		// remove all whitespaces from url
 		url = url.replaceAll("\\s", "");
-        if (LOG_ENABLED) Log.d(LOG_TAG, "keyword URL: " + url);
 
-		//ask FourSquare.com for venues, response is in JSON format
+        // log
+        if (LOG_ENABLED) Log.d(LOG_TAG, "query URL: " + url);
+
+		// ask FourSquare.com for venues, response is in JSON format
         FourSquareRestClient.get(url, new JsonHttpResponseHandler(){
 
             @Override
@@ -333,12 +338,11 @@ public class MainActivity extends SherlockActivity {
 
             @Override
             public void onFailure(Throwable throwable, JSONObject jsonObject) {
+                // log
                 if (LOG_ENABLED) Log.d(LOG_TAG, "JsonHttpResponseHandler: onFailure()");
-                makeToast("Error retrieving data, try again!");
 
                 // hide refreshing animations
-                pullToRefreshListView.onRefreshComplete();
-                showProgressBar(false);
+                stopRefreshMakeToast(true, "Error retrieving data, try again!");
             }
         });
 	}
@@ -352,11 +356,15 @@ public class MainActivity extends SherlockActivity {
      * @param jsonObject JSON object from HTTP client containing venues
      */
     private void parseJson(JSONObject jsonObject) {
+        // log
         if (LOG_ENABLED) Log.d(LOG_TAG, "parseJson()");
 
         if ( jsonObject == null) {
+            // log
             if (LOG_ENABLED) Log.d(LOG_TAG, "jsonObject == null, refreshing!");
-            refreshVenues();
+
+            // hide refreshing animation, inform user
+            stopRefreshMakeToast(true, "Error, try refresh!");
             return;
         }
 
@@ -365,8 +373,8 @@ public class MainActivity extends SherlockActivity {
 
         // parse JSON data
         try {
-            JSONObject response = jsonObject.getJSONObject("response");
-            JSONArray venues = response.getJSONArray("venues");
+            final JSONObject response = jsonObject.getJSONObject("response");
+            final JSONArray venues = response.getJSONArray("venues");
 
             for (int i = 0; i < venues.length(); i++) {
                 Venue venue = new Venue();
@@ -392,16 +400,18 @@ public class MainActivity extends SherlockActivity {
                 venuesList.add(venue);
             }
         } catch (JSONException e) {
+            // log
             if (LOG_ENABLED) Log.d(LOG_TAG, "parseJson(): " + e.toString() );
-            makeToast("Invalid JSON data, try refresh!");
+
+            // hide refreshing animation, inform user
+            stopRefreshMakeToast(true, "Error, try refresh!");
         }
 
         //refreshVenues listview
         drawListView();
 
         //refreshing is complete, hide loading animations
-        pullToRefreshListView.onRefreshComplete();
-        showProgressBar(false);
+        stopRefreshMakeToast(false, null);
     }
 
 
@@ -410,12 +420,33 @@ public class MainActivity extends SherlockActivity {
      * Also if the list id empty, toast is shown
      */
     private void drawListView() {
+        // log
         if (LOG_ENABLED) Log.d(LOG_TAG, "drawListView()");
+
+        // if no venues was received from FourSquare
+        if (venuesList.isEmpty()) makeToast("No venues found!");
+
+        // update ListView
         adapter.notifyDataSetChanged();
     }
 
 
-       /**
+    /**
+     * Hide refreshing animations and show Toast message
+     * @param makeToast makes Toast message if true
+     * @param message   message to show on Toast
+     */
+    private void stopRefreshMakeToast(boolean makeToast, String message) {
+        // inform user
+        if ( makeToast ) makeToast( message );
+
+        // hide refreshing animations
+        pullToRefreshListView.onRefreshComplete();
+        showProgressBar(false);
+    }
+
+
+    /**
      * Replaces refresh icon (action item on actionbar) with indeterminate progressBar
      * and vice versa.
      * @param visible If true, refresh icon is made invisible and progressBar is shown.
@@ -432,6 +463,15 @@ public class MainActivity extends SherlockActivity {
 
 
     /**
+     * Display toast message box
+     * @param message Message to be displayed in toast,
+     */
+    private void makeToast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+    }
+
+
+    /**
      * The application is using ActionBarSherlock library therefore this method places menu
      * items on actionBar. Global boolean refreshActionItemVisibility determines refresh icon
      * (refresh action item) visibility.
@@ -440,7 +480,7 @@ public class MainActivity extends SherlockActivity {
      */
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getSupportMenuInflater();
+        final MenuInflater inflater = getSupportMenuInflater();
 	    inflater.inflate(R.menu.menu, menu);
 
         //test if refreshVenues action item needs to be hidden
@@ -461,9 +501,8 @@ public class MainActivity extends SherlockActivity {
 
 	    switch (item.getItemId()) {
             case android.R.id.home:
-                //show applications About page
-                Intent i = new Intent(MainActivity.this, AboutActivity.class);
-                startActivity(i);
+                // toggle SlidingMenu
+                menu.toggle();
                 return true;
             case R.id.refresh:
 	        	refreshVenues();
@@ -485,15 +524,6 @@ public class MainActivity extends SherlockActivity {
 	            return super.onOptionsItemSelected(item);
 	    }
 	}
-
-
-    /**
-     * Display toast message box
-     * @param message Message to be displayed in toast,
-     */
-    private void makeToast(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-    }
 
 
     /**

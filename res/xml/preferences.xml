@@ -38,15 +38,6 @@
 	        android:inputType="number"
             android:digits="0123456789"
 	        android:defaultValue="100" />
-	    
-	    <ListPreference
-	        android:key="provider"
-	        android:title="Location accuracy"
-	        android:summary="Select your location detection accuracy"
-	        android:dialogTitle="Location accuracy"
-	        android:entries="@array/pref_accuracy_entries"
-	        android:entryValues="@array/pref_accuracy_values"
-	        android:defaultValue="network" />
 	</PreferenceCategory>
 	
 	<PreferenceCategory 
@@ -54,7 +45,7 @@
         android:key="about">
 	    <Preference
 	        android:title="FSScanner"
-	        android:summary="Version 1.1" >
+	        android:summary="Credits, version info, used libraries, etc." >
 		    <intent
 		        android:action=".AboutActivity" />
 		</Preference>
