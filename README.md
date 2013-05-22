@@ -23,6 +23,7 @@ I have used following 3rd party libraries in my application:
 * PulltoRefresh - https://github.com/chrisbanes/Android-PullToRefresh
 * LazyList - https://github.com/thest1/LazyList
 * android-async-http - https://github.com/loopj/android-async-http
+* ACRA Error reporting - https://github.com/ACRA/acra
 
 
 
