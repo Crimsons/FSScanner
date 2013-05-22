@@ -23,6 +23,14 @@
                 android:text="@string/copyrigth"
                 style="@style/about_activity.small" />
         <TextView
+                android:text="Version 1.2"
+                style="@style/about_activity.medium"
+                android:layout_marginTop="18dp" />
+        <TextView
+                android:text="* implemented ACRA error reporting"
+                style="@style/about_activity.small"
+                android:layout_gravity="left" />
+        <TextView
                 android:text="Version 1.1"
                 style="@style/about_activity.medium"
                 android:layout_marginTop="18dp" />

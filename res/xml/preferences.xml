@@ -43,7 +43,13 @@
 	<PreferenceCategory 
         android:title="About"
         android:key="about">
-	    <Preference
+        <Preference
+                android:title="Test Error Reporting"
+                android:summary="Forces app to have unexpected error to test ACRA crash reporting implementation" >
+            <intent
+                    android:action=".ActivityNotFoundActivity" />
+        </Preference>
+        <Preference
 	        android:title="FSScanner"
 	        android:summary="Credits, version info, used libraries, etc." >
 		    <intent

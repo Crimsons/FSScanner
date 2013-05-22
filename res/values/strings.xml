@@ -5,4 +5,10 @@
     <string name="action_settings">Settings</string>
     <string name="copyrigth">\u00A9 2013 Jakob Hoyer</string>
 
+    <string name="crash_text">An unexpected error occurred forcing the
+        application to stop. Please help us fix this by sending us error data,
+        all you have to do is click OK and send the precomposed email.</string>
+    <string name="crash_comment_text">You might add your comments about the problem below:</string>
+    <string name="crash_title">FSScanner has crashed</string>
+
 </resources>

@@ -4,6 +4,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/android-support-v4"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/google-play-services"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/android-async-http-1.4.3"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/acra-4.5.0"/>
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Android-PullToRefresh"/>

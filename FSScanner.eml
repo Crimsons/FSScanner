@@ -7,5 +7,6 @@
 		<level name="android-support-v4" value="project"/>
 		<level name="google-play-services" value="project"/>
 		<level name="android-async-http-1.4.3" value="project"/>
+		<level name="acra-4.5.0" value="project"/>
 	</levels>
 </component>
